@@ -3,9 +3,6 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 
-# for guthub
-# for second branch
-
 class Bird(QGraphicsPixmapItem):
     def __init__(self):  
         super().__init__(QPixmap("bird.png").scaled(50, 50))
