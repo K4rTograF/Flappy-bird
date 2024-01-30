@@ -30,15 +30,21 @@ class RestartMenu(QGraphicsRectItem):
         super().__init__(0, 0, 850, 600)
         self.setBrush(Qt.black)
         self.setOpacity(0.7)
-        
+
         restart_button = QPushButton("RESTART")
         restart_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
+        quit_button = QPushButton('QUIT')
+        quit_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
         proxy = QGraphicsProxyWidget(self)
+        proxy1 = QGraphicsProxyWidget(self)
         proxy.setWidget(restart_button)
+        proxy1.setWidget(quit_button)
         proxy.setPos(275, 275)
+        proxy1.setPos(275, 340)
         scene.addItem(proxy)
+        scene.addItem(proxy1)
         restart_button.clicked.connect(scene.reset_game)
-
+        quit_button.clicked.connect(scene.quit_game)  
 class GameScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
@@ -103,6 +109,9 @@ class GameScene(QGraphicsScene):
         self.pipes = []
         self.pipe_frame_count = 0
         self.setSceneRect(0, 0, 800, 600)
+    def quit_game(self):
+        sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     player = QMediaPlayer()
