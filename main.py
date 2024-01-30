@@ -1,12 +1,12 @@
 import sys
-from PySide6.QtCore import Qt, QTimer, QUrl
+from PySide6.QtCore import Qt, QTimer, QUrl, QPointF
 from PySide6.QtGui import QPixmap, QPainter
 from PySide6.QtWidgets import QApplication, QGraphicsScene, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 from PySide6.QtMultimedia import *
 class MyMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        # Устанавливаем фиксированный размер окна
+        self.setWindowTitle('Flappy Tesak')
         self.setFixedSize(805, 605)
         self.show()
 class Bird(QGraphicsPixmapItem):
@@ -97,7 +97,10 @@ class GameScene(QGraphicsScene):
             if any(isinstance(item, Pipe) for item in colliding_items):
                 print("Game Over!")
                 self.show_restart_menu()
-
+            elif self.bird.pos().y() > 570:
+                self.bird.hide()
+                print("Game Over!")
+                self.show_restart_menu()
             self.pipe_frame_count = (self.pipe_frame_count + 1) % self.pipe_spawn_delay
 
     def show_restart_menu(self):
