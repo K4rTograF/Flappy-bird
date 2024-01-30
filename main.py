@@ -1,8 +1,14 @@
 import sys
 from PySide6.QtCore import Qt, QTimer, QUrl
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
+from PySide6.QtGui import QPixmap, QPainter
+from PySide6.QtWidgets import QApplication, QGraphicsScene, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 from PySide6.QtMultimedia import *
+class MyMainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        # Устанавливаем фиксированный размер окна
+        self.setFixedSize(805, 605)
+        self.show()
 class Bird(QGraphicsPixmapItem):
     def __init__(self):  
         super().__init__(QPixmap("bird.png").scaled(50, 50))
@@ -124,5 +130,10 @@ if __name__ == "__main__":
     view = QGraphicsView()
     scene = GameScene()
     view.setScene(scene)
-    view.show()
+    mainw = MyMainWindow()
+    
+    view.setRenderHint(QPainter.Antialiasing)
+    view.setRenderHint(QPainter.SmoothPixmapTransform)
+
+    mainw.setCentralWidget(view)
     sys.exit(app.exec_())
