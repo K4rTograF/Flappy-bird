@@ -14,10 +14,10 @@ class Bird(QGraphicsPixmapItem):
         super().__init__(QPixmap("bird.png").scaled(50, 50))
         self.setPos(100, 250)
         self.y_velocity = 0
-        self.gravity = 1
+        self.gravity = -1
  
     def jump(self):
-        self.y_velocity = -15
+        self.y_velocity = 15
 
     def update_position(self):
         self.y_velocity += self.gravity
@@ -63,7 +63,7 @@ class GameScene(QGraphicsScene):
 
         self.pipes = []
         self.pipe_frame_count = 0  # Counter to track frames between pipes
-        self.pipe_spawn_delay = 65  # Number of frames to wait between pipes
+        self.pipe_spawn_delay = 80  # Number of frames to wait between pipes
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_scene)
         self.timer.start(20)

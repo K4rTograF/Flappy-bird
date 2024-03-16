@@ -10,7 +10,30 @@ class MyMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('Flappy Tesak')
         self.setFixedSize(805, 605)
-        self.show()
+    
+        # player
+        self.player = QMediaPlayer()
+        self.player.setSource(QUrl.fromLocalFile("background_music.mp3"))
+        
+        # audio
+        self.audioOutput = QAudioOutput()
+        self.audioOutput.setVolume(50)
+        self.player.setAudioOutput(self.audioOutput)
+        self.player.play()
+        
+        # view
+        self.view = QGraphicsView()
+        
+        # scene
+        self.scene = GameScene()
+        
+        # set scene
+        self.view.setScene(self.scene)
+        self.view.setRenderHint(QPainter.Antialiasing)
+        self.view.setRenderHint(QPainter.SmoothPixmapTransform)
+        
+        self.setCentralWidget(self.view)
+
 
 class Bird(QGraphicsPixmapItem):
     def __init__(self):  
@@ -44,6 +67,7 @@ class RestartMenu(QGraphicsRectItem):
         self.setOpacity(0.7)
 
         self.scene = scene
+        # что-то
         restart_button = QPushButton("RESTART")
         restart_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
         quit_button = QPushButton('QUIT')
@@ -54,16 +78,11 @@ class RestartMenu(QGraphicsRectItem):
         proxy1.setWidget(quit_button)
         proxy.setPos(275, 275)
         proxy1.setPos(275, 340)
+        proxy.setFlag(QGraphicsRectItem.ItemIsFocusable)
         scene.addItem(proxy)
         scene.addItem(proxy1)
         restart_button.clicked.connect(scene.reset_game)
         quit_button.clicked.connect(scene.quit_game)
-
-    def keyPressEvent(self, event):
-        print(event)
-        if event.key() == Qt.Key_Space:
-            print("Space pressedb")
-            self.scene.reset_game()
 
 
 class GameScene(QGraphicsScene):
@@ -71,9 +90,9 @@ class GameScene(QGraphicsScene):
         super().__init__()
 
         self.background = QGraphicsPixmapItem(QPixmap("background.png").scaled(800, 600))
-        self.addItem(self.background)
-
         self.bird = Bird()
+
+        self.addItem(self.background)
         self.addItem(self.bird)
 
         self.pipes = []
@@ -88,8 +107,12 @@ class GameScene(QGraphicsScene):
         self.setSceneRect(0, 0, 800, 600)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_B and not self.restart_menu:
-            self.bird.jump()
+        print(event)
+        if event.key() == Qt.Key_Space:
+            if self.restart_menu:
+                self.reset_game()
+            else:
+                self.bird.jump()
 
     def update_scene(self):
         if not self.restart_menu:
@@ -147,20 +170,7 @@ class GameScene(QGraphicsScene):
 
 
 if __name__ == "__main__":
-    player = QMediaPlayer()
-    audioOutput = QAudioOutput()
-    player.setAudioOutput(audioOutput)
-    player.setSource(QUrl.fromLocalFile("background_music.mp3"))
-    audioOutput.setVolume(50)
-    player.play()
     app = QApplication(sys.argv)
-    view = QGraphicsView()
-    scene = GameScene()
-    view.setScene(scene)
     mainw = MyMainWindow()
-    
-    view.setRenderHint(QPainter.Antialiasing)
-    view.setRenderHint(QPainter.SmoothPixmapTransform)
-
-    mainw.setCentralWidget(view)
+    mainw.show()
     sys.exit(app.exec_())
