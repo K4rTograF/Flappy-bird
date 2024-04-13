@@ -1,20 +1,44 @@
 import sys
 import random
+import time
 from PySide6.QtCore import Qt, QTimer, QUrl, QPointF
 from PySide6.QtGui import QPixmap, QPainter
-from PySide6.QtWidgets import QApplication, QGraphicsScene, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
+from PySide6.QtWidgets import QApplication,QLabel, QGraphicsScene,QGraphicsTextItem, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 from PySide6.QtMultimedia import *
 
 class MyMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Flappy Tesak')
+        self.setWindowTitle('Flappy Egypt')
         self.setFixedSize(805, 605)
-        self.show()
+    
+        # player
+        self.player = QMediaPlayer()
+        self.player.setSource(QUrl.fromLocalFile("background_music.mp3"))
+        
+        # audio
+        self.audioOutput = QAudioOutput()
+        self.audioOutput.setVolume(50)
+        self.player.setAudioOutput(self.audioOutput)
+        self.player.play()
+        
+        # view
+        self.view = QGraphicsView()
+        
+        # scene
+        self.scene = GameScene()
+        
+        # set scene
+        self.view.setScene(self.scene)
+        self.view.setRenderHint(QPainter.Antialiasing)
+        self.view.setRenderHint(QPainter.SmoothPixmapTransform)
+        
+        self.setCentralWidget(self.view)
+
 
 class Bird(QGraphicsPixmapItem):
     def __init__(self):  
-        super().__init__(QPixmap("bird.png").scaled(50, 50))
+        super().__init__(QPixmap("bird.png").scaled(100, 100))
         self.setPos(100, 250)
         self.y_velocity = 0
         self.gravity = -0.8
@@ -30,7 +54,7 @@ class Pipe(QGraphicsPixmapItem):
     def __init__(self, height, is_top):
         super().__init__(QPixmap("pipe.png").scaled(100, height))
         if is_top:
-            self.setPos(800, 0)
+            self.setPos(800, -5)
         else:
             self.setPos(800, 600 - height)
 
@@ -40,30 +64,46 @@ class Pipe(QGraphicsPixmapItem):
 class RestartMenu(QGraphicsRectItem):
     def __init__(self, scene):
         super().__init__(0, 0, 850, 600)
-        self.setBrush(Qt.black)
-        self.setOpacity(0.7)
 
         self.scene = scene
+        # menu
         restart_button = QPushButton("RESTART")
-        restart_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
         quit_button = QPushButton('QUIT')
-        quit_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
-        proxy = QGraphicsProxyWidget(self)
-        proxy1 = QGraphicsProxyWidget(self)
-        proxy.setWidget(restart_button)
-        proxy1.setWidget(quit_button)
-        proxy.setPos(275, 275)
-        proxy1.setPos(275, 340)
-        scene.addItem(proxy)
-        scene.addItem(proxy1)
+        restart_info = QLabel('press space to restart game')
+        game_status_info = QLabel('Game Over!')
+        background_label = QLabel()
+
+        # styles
+        game_status_info.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
+        restart_info.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 30px;")
+        restart_button.setStyleSheet("background-color:  transparent; border: 2px solid black;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
+        quit_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
+        #proxy_objects
+        proxy_restart = QGraphicsProxyWidget(self)
+        proxy_quit = QGraphicsProxyWidget(self)
+        proxy_label = QGraphicsProxyWidget(self)
+        proxy_game_status = QGraphicsProxyWidget(self)
+
+        proxy_restart.setWidget(restart_button)
+        proxy_game_status.setWidget(game_status_info)
+        proxy_quit.setWidget(quit_button)
+        proxy_label.setWidget(restart_info)
+
+        proxy_restart.setPos(280, 275)
+        proxy_quit.setPos(280, 340)
+        proxy_game_status.setPos(210,150)
+        proxy_label.setPos(180,420)
+
+        proxy_restart.setFlag(QGraphicsRectItem.ItemIsFocusable)
+        proxy_quit.setFlag(QGraphicsRectItem.ItemIsFocusable)
+
+        scene.addItem(proxy_restart)
+        scene.addItem(proxy_game_status)
+        scene.addItem(proxy_quit)
+        scene.addItem(proxy_label)
+        #button_connect
         restart_button.clicked.connect(scene.reset_game)
         quit_button.clicked.connect(scene.quit_game)
-
-    def keyPressEvent(self, event):
-        print(event)
-        if event.key() == Qt.Key_Space:
-            print("Space pressedb")
-            self.scene.reset_game()
 
 
 class GameScene(QGraphicsScene):
@@ -71,9 +111,9 @@ class GameScene(QGraphicsScene):
         super().__init__()
 
         self.background = QGraphicsPixmapItem(QPixmap("background.png").scaled(800, 600))
-        self.addItem(self.background)
-
         self.bird = Bird()
+
+        self.addItem(self.background)
         self.addItem(self.bird)
 
         self.pipes = []
@@ -87,9 +127,19 @@ class GameScene(QGraphicsScene):
 
         self.setSceneRect(0, 0, 800, 600)
 
+        self.score = 0
+        self.score_display = QGraphicsTextItem()
+        self.score_display.setPlainText("Score: 0")
+        self.score_display.setDefaultTextColor(Qt.white)
+        self.score_display.setPos(10, 10)
+        self.addItem(self.score_display)
+
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_B and not self.restart_menu:
-            self.bird.jump()
+        if event.key() == Qt.Key_Space:
+            if self.restart_menu:
+                self.reset_game()
+            else:
+                self.bird.jump()
 
     def update_scene(self):
         if not self.restart_menu:
@@ -110,6 +160,8 @@ class GameScene(QGraphicsScene):
                 self.pipes.extend([pipe_top, pipe_bottom])
                 self.addItem(pipe_top)
                 self.addItem(pipe_bottom)
+                self.score += 1
+                self.update_score_display()
 
             for pipe in self.pipes:
                 pipe.move()
@@ -120,11 +172,13 @@ class GameScene(QGraphicsScene):
             colliding_items = self.collidingItems(self.bird)
             if any(isinstance(item, Pipe) for item in colliding_items):
                 print("Game Over!")
+                time.sleep(0.5)
                 self.show_restart_menu()
             elif self.bird.pos().y() > 570:
                 self.bird.hide()
-                print("Game Over!")
+                time.sleep(0.5)
                 self.show_restart_menu()
+                print("Game Over!")   
             self.pipe_frame_count = (self.pipe_frame_count + 1) % self.pipe_spawn_delay
 
     def show_restart_menu(self):
@@ -133,7 +187,7 @@ class GameScene(QGraphicsScene):
     def reset_game(self):
         self.clear()  # Clear the scene
         self.restart_menu = None
-        self.background = QGraphicsPixmapItem(QPixmap("background.png").scaled(800, 600))
+        self.background  = QGraphicsPixmapItem(QPixmap("background.png").scaled(800, 600))
         self.addItem(self.background)
 
         self.bird = Bird()
@@ -141,26 +195,19 @@ class GameScene(QGraphicsScene):
 
         self.pipes = []
         self.pipe_frame_count = 0
+        self.score = 0
+        self.update_score_display()
         self.setSceneRect(0, 0, 800, 600)
+
+    def update_score_display(self):
+        self.score_display.setPlainText(f"Score: {self.score}")
+
     def quit_game(self):
         sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
-    player = QMediaPlayer()
-    audioOutput = QAudioOutput()
-    player.setAudioOutput(audioOutput)
-    player.setSource(QUrl.fromLocalFile("background_music.mp3"))
-    audioOutput.setVolume(50)
-    player.play()
     app = QApplication(sys.argv)
-    view = QGraphicsView()
-    scene = GameScene()
-    view.setScene(scene)
     mainw = MyMainWindow()
-    
-    view.setRenderHint(QPainter.Antialiasing)
-    view.setRenderHint(QPainter.SmoothPixmapTransform)
-
-    mainw.setCentralWidget(view)
+    mainw.show()
     sys.exit(app.exec_())
