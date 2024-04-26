@@ -12,15 +12,7 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('Flappy Egypt')
         self.setFixedSize(805, 605)
     
-        # player
-        self.player = QMediaPlayer()
-        self.player.setSource(QUrl.fromLocalFile("background_music.mp3"))
         
-        # audio
-        self.audioOutput = QAudioOutput()
-        self.audioOutput.setVolume(50)
-        self.player.setAudioOutput(self.audioOutput)
-        self.player.play()
         
         # view
         self.view = QGraphicsView()
@@ -38,7 +30,7 @@ class MyMainWindow(QMainWindow):
 
 class Bird(QGraphicsPixmapItem):
     def __init__(self):  
-        super().__init__(QPixmap("bird.png").scaled(30, 30))
+        super().__init__(QPixmap("bird.png").scaled(50, 50))
         self.setPos(100, 250)
         self.y_velocity = 0
         self.gravity = -0.8
@@ -77,7 +69,7 @@ class RestartMenu(QGraphicsRectItem):
         game_status_info.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
         restart_info.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 30px;")
         restart_button.setStyleSheet("background-color:  transparent; border: 2px solid black;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
-        quit_button.setStyleSheet("background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
+        quit_button.setStyleSheet("background-color:  transparent; border: 2px solid black;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
         #proxy_objects
         proxy_restart = QGraphicsProxyWidget(self)
         proxy_quit = QGraphicsProxyWidget(self)
@@ -133,8 +125,16 @@ class GameScene(QGraphicsScene):
         self.score_display.setDefaultTextColor(Qt.red)
         self.score_display.setPos(10, 10)
         self.addItem(self.score_display)
-        
 
+        # player
+        self.player = QMediaPlayer()
+        self.player.setSource(QUrl.fromLocalFile("background_music.mp3"))
+        # audio
+        self.audioOutput = QAudioOutput()
+        self.audioOutput.setVolume(50)
+        self.player.setAudioOutput(self.audioOutput)
+        self.player.play()
+        
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Space:
@@ -177,9 +177,10 @@ class GameScene(QGraphicsScene):
             if any(isinstance(item, Pipe) for item in colliding_items):
                 print("Game Over!")
                 self.show_restart_menu()
-            elif self.bird.pos().y() > 570:
-                self.bird.hide()
+                self.player.stop()
+            elif self.bird.pos().y() > 570 or self.bird.pos().y() < 0:
                 self.show_restart_menu()
+                self.player.stop()
                 print("Game Over!")   
             self.pipe_frame_count = (self.pipe_frame_count + 1) % self.pipe_spawn_delay
 
@@ -205,6 +206,9 @@ class GameScene(QGraphicsScene):
         self.score_display.setDefaultTextColor(Qt.green)
         self.score_display.setPos(10, 10)
         self.addItem(self.score_display)
+
+        self.player.play()
+        
         
     def update_score_display(self):
         self.score_display.setPlainText(f"Score: {self.score}")
