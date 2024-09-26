@@ -105,7 +105,7 @@ class Spike(QGraphicsPixmapItem):
         self.gravity_toggled = False
 
     def move(self):
-        self.setPos(self.x() - 5, self.y())  # Move spike leftward like pipes
+        self.setPos(self.x() - 10, self.y())  # Move spike leftward like pipes
 
 
 
