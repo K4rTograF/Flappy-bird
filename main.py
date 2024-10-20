@@ -1,7 +1,7 @@
 import sys
 import random
 from PySide6.QtCore import Qt, QTimer, QUrl
-from PySide6.QtGui import QPixmap, QPainter, QFont
+from PySide6.QtGui import QPixmap, QPainter, QFont, QBrush, QColor
 from PySide6.QtWidgets import QApplication, QLabel, QGraphicsScene, QMainWindow, QGraphicsView, QGraphicsTextItem, \
     QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -12,7 +12,7 @@ GRAVITY = -0.8  # Global gravity variable, will be toggled upon spike collision
 class MyMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Flappy Egypt')
+        self.setWindowTitle('Летучий Египет')
         self.setFixedSize(805, 605)
 
         self.view = QGraphicsView()
@@ -32,6 +32,8 @@ class MyMainWindow(QMainWindow):
         self.view.setScene(self.game_scene)  # Switch to the game scene
         self.game_scene.start_game()
 
+    def close(self):
+        sys.exit(app.exec())
 
 class StartScene(QGraphicsScene):
     def __init__(self, main_window):
@@ -42,13 +44,13 @@ class StartScene(QGraphicsScene):
         self.background = QGraphicsPixmapItem(QPixmap("start_background.png").scaled(800, 600))
         self.addItem(self.background)
 
-        title = QGraphicsTextItem("Flappy Egypt")
+        title = QGraphicsTextItem("Летучий Египет")
         title.setDefaultTextColor(Qt.red)
         title.setFont(QFont("Algerian", 50))
         title.setPos(150, 100)
         self.addItem(title)
 
-        start_button = QPushButton("START")
+        start_button = QPushButton("НАЧАТЬ")
         start_button.setStyleSheet(
             "background-color: transparent; border: 2px solid black; font: bold italic large 'Algerian'; color: red; font-size: 50px;")
         proxy_start = QGraphicsProxyWidget()
@@ -56,15 +58,18 @@ class StartScene(QGraphicsScene):
         proxy_start.setPos(280, 275)
         self.addItem(proxy_start)
 
-        start_button.clicked.connect(self.main_window.start_game)  # Connect to start the game
+        start_button.clicked.connect(self.main_window.start_game)
 
-        quitt_button = QPushButton("QUIT")
+        quitt_button = QPushButton("ВЫХОД")
         quitt_button.setStyleSheet(
             "background-color: transparent; border: 2px solid black; font: bold italic large 'Algerian'; color: red; font-size: 50px;")
         proxy_quit = QGraphicsProxyWidget()
         proxy_quit.setWidget(quitt_button)
         proxy_quit.setPos(280, 375)
         self.addItem(proxy_quit)
+
+        quitt_button.clicked.connect(self.main_window.close)
+
 
 
 class Bird(QGraphicsPixmapItem):
@@ -97,7 +102,6 @@ class Pipe(QGraphicsPixmapItem):
     def move(self):
         self.setPos(self.x() - 5, self.y())
 
-
 class Spike(QGraphicsPixmapItem):
     def __init__(self, y_position):
         super().__init__(QPixmap("spike.png").scaled(50, 50))
@@ -105,30 +109,31 @@ class Spike(QGraphicsPixmapItem):
         self.gravity_toggled = False
 
     def move(self):
-        self.setPos(self.x() - 10, self.y())  # Move spike leftward like pipes
-
-
+        self.setPos(self.x() - 10, self.y())
 
 class RestartMenu(QGraphicsRectItem):
     def __init__(self, scene):
-        super().__init__(0, 0, 850, 600)
+        super().__init__(0, 0, 610, 400)
 
         self.scene = scene
 
-        restart_button = QPushButton("RESTART")
-        quit_button = QPushButton('QUIT')
-        restart_info = QLabel('Press Enter to restart the game')
-        game_status_info = QLabel('Game Over!')
+        self.setPos((850 - 650) / 2, (600 - 400) / 2)
+        self.setBrush(QBrush(QColor(255, 255, 204, 150)))  # Semi-transparent black background
+
+        restart_button = QPushButton("")
+        quit_button = QPushButton('Выйти в главное меню')
+        restart_info = QLabel('Нажмите Enter, чтобы начать заново ')
+        game_status_info = QLabel('Игра окончена!')
 
         # Styles
         game_status_info.setStyleSheet(
-            "background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 60px;")
+            "background-color: transparent; border: none; font: bold italic large 'Algerian'; color: red; font-size: 60px;")
         restart_info.setStyleSheet(
-            "background-color:  transparent; border: none;  font: bold italic large  \"Algerian\"; color: red; font-size: 30px;")
+            "background-color: transparent; border: none; font: bold italic large 'Algerian'; color: red; font-size: 30px;")
         restart_button.setStyleSheet(
-            "background-color:  transparent; border: 2px solid black;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
+            "background-color: transparent; border: none; font: bold italic large 'Algerian'; color: red; font-size: 1px;")
         quit_button.setStyleSheet(
-            "background-color:  transparent; border: 2px solid black;  font: bold italic large  \"Algerian\"; color: red; font-size: 50px;")
+            "background-color: transparent; border: 2px solid yellow; font: bold italic large 'Algerian'; color: red; font-size: 50px;")
 
         # Proxy widgets
         proxy_restart = QGraphicsProxyWidget(self)
@@ -141,14 +146,15 @@ class RestartMenu(QGraphicsRectItem):
         proxy_quit.setWidget(quit_button)
         proxy_label.setWidget(restart_info)
 
-        proxy_restart.setPos(280, 275)
-        proxy_quit.setPos(280, 340)
-        proxy_game_status.setPos(210, 150)
-        proxy_label.setPos(180, 420)
+        proxy_restart.setPos(350, 200)
+        proxy_quit.setPos(1, 160)
+        proxy_game_status.setPos(60, 30)
+        proxy_label.setPos(10, 260)
 
         proxy_restart.setFlag(QGraphicsRectItem.ItemIsFocusable)
         proxy_quit.setFlag(QGraphicsRectItem.ItemIsFocusable)
 
+        scene.addItem(self)
         scene.addItem(proxy_restart)
         scene.addItem(proxy_game_status)
         scene.addItem(proxy_quit)
@@ -157,6 +163,9 @@ class RestartMenu(QGraphicsRectItem):
         # Button connections
         restart_button.clicked.connect(self.scene.reset_game)
         quit_button.clicked.connect(self.scene.quit_game)
+
+
+
 
 
 class GameScene(QGraphicsScene):
@@ -192,7 +201,8 @@ class GameScene(QGraphicsScene):
         self.score_display = QGraphicsTextItem()
         self.score_display.setPlainText(f"СЧЁТ: {self.score}")
         self.score_display.setDefaultTextColor(Qt.red)
-        self.score_display.setPos(10, 10)
+        self.score_display.setFont(QFont('Algerian', 25))
+        self.score_display.setPos(335, 10)
         self.addItem(self.score_display)
 
         self.player = QMediaPlayer()
