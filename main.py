@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QGraphicsScene, QMainWindow,
     QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget, QPushButton
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
-GRAVITY = -0.8  # Global gravity variable, will be toggled upon spike collision
+GRAVITY = -0.8  
 
 
 class MyMainWindow(QMainWindow):
@@ -16,9 +16,9 @@ class MyMainWindow(QMainWindow):
         self.setFixedSize(805, 605)
 
         self.view = QGraphicsView()
-        self.start_scene = StartScene(self)  # Create the start scene
+        self.start_scene = StartScene(self)  
 
-        self.view.setScene(self.start_scene)  # Set the initial scene to start scene
+        self.view.setScene(self.start_scene) 
         self.view.setRenderHint(QPainter.Antialiasing)
         self.view.setRenderHint(QPainter.SmoothPixmapTransform)
 
@@ -28,8 +28,8 @@ class MyMainWindow(QMainWindow):
         self.view.setScene(self.start_scene)
 
     def start_game(self):
-        self.game_scene = GameScene(self)  # Create a new game scene every time the game starts
-        self.view.setScene(self.game_scene)  # Switch to the game scene
+        self.game_scene = GameScene(self)  
+        self.view.setScene(self.game_scene)  
         self.game_scene.start_game()
 
     def close(self):
@@ -80,13 +80,13 @@ class Bird(QGraphicsPixmapItem):
 
     def jump(self):
         global GRAVITY
-        if GRAVITY < 0:  # Normal gravity (bird falls downward), jump upwards
+        if GRAVITY < 0:  
             self.y_velocity = 9
-        else:  # Reversed gravity (bird falls upward), jump downward
+        else:  
             self.y_velocity = -9
 
     def update_position(self):
-        self.y_velocity += GRAVITY  # Apply gravity
+        self.y_velocity += GRAVITY  
         self.setPos(self.x(), self.y() + self.y_velocity)
 
 
@@ -118,7 +118,7 @@ class RestartMenu(QGraphicsRectItem):
         self.scene = scene
 
         self.setPos((850 - 650) / 2, (600 - 400) / 2)
-        self.setBrush(QBrush(QColor(255, 255, 204, 150)))  # Semi-transparent black background
+        self.setBrush(QBrush(QColor(255, 255, 204, 150)))  
 
         restart_button = QPushButton("")
         quit_button = QPushButton('Выйти в главное меню')
@@ -186,10 +186,10 @@ class GameScene(QGraphicsScene):
         self.pipe_frame_count = 0
         self.pipe_spawn_delay = 100
 
-        self.spikes = []  # Add a list to track spikes
-        self.spike_frame_count = 0  # Frame counter for spike
-        self.spike_on_screen = False  # Flag to track if a spike is already present
-        self.spike_spawn_delay = random.randint(10, 20)  # Random delay for spikes
+        self.spikes = []  
+        self.spike_frame_count = 0 
+        self.spike_on_screen = False 
+        self.spike_spawn_delay = random.randint(10, 20)  #delay for spikes
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_scene)
@@ -214,7 +214,7 @@ class GameScene(QGraphicsScene):
         self.player.play()
 
     def start_game(self):
-        self.timer.start(20)  # Start the timer when the game begins
+        self.timer.start(20) 
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Space:
@@ -243,21 +243,19 @@ class GameScene(QGraphicsScene):
 
             # SPIKE SPAWNING LOGIC
             if self.spike_frame_count == 0 and not self.spike_on_screen:
-                spike_y = random.randint(150, 450)  # Ensure it spawns between pipes
+                spike_y = random.randint(150, 450)  #between pipes
                 spike = Spike(spike_y)
                 self.addItem(spike)
-                self.spikes.append(spike)  # Add the spike to the list for tracking
-                self.spike_on_screen = True  # Set flag that a spike is on screen
+                self.spikes.append(spike) 
+                self.spike_on_screen = True 
 
-            # Move spikes and check if they are off-screen
-            for spike in self.spikes[:]:  # Copy the list to avoid modifying it while iterating
+            for spike in self.spikes[:]:  
                 spike.move()
-                if spike.x() + spike.pixmap().width() < 0:  # Spike is off the screen
-                    self.removeItem(spike)  # Remove from the scene
-                    self.spikes.remove(spike)  # Remove from the list
-                    self.spike_on_screen = False  # Allow spawning of new spikes
+                if spike.x() + spike.pixmap().width() < 0:  #offscreen
+                    self.removeItem(spike)  
+                    self.spikes.remove(spike)  
+                    self.spike_on_screen = False
 
-            # Handle pipes
             for pipe in self.pipes:
                 pipe.move()
                 if not pipe.passed and pipe.x() + pipe.pixmap().width() < self.bird.x():
@@ -269,7 +267,7 @@ class GameScene(QGraphicsScene):
 
             self.score_display.setPlainText(f"СЧЁТ: {int(self.score)}")
 
-            # Check for collisions
+            #collisions
             colliding_items = self.collidingItems(self.bird)
             if any(isinstance(item, Pipe) for item in
                    colliding_items) or self.bird.pos().y() > 570 or self.bird.pos().y() < 0:
@@ -279,11 +277,10 @@ class GameScene(QGraphicsScene):
 
             if any(isinstance(item, Spike) for item in colliding_items):
                 for item in colliding_items:
-                    if isinstance(item,Spike) and not item.gravity_toggled:  # Check if gravity hasn't been toggled yet for this spike
-                        GRAVITY = -GRAVITY  # Reverse gravity
+                    if isinstance(item,Spike) and not item.gravity_toggled:
+                        GRAVITY = -GRAVITY 
                         item.gravity_toggled = True
 
-            # Increment counters
             self.pipe_frame_count = (self.pipe_frame_count + 1) % self.pipe_spawn_delay # Pipe delay logic
             self.spike_frame_count = (self.spike_frame_count + 1) % self.spike_spawn_delay  # Spike delay logic
 
@@ -292,7 +289,7 @@ class GameScene(QGraphicsScene):
 
     def reset_game(self):
         global GRAVITY
-        GRAVITY = -0.8  # Reset gravity to default
+        GRAVITY = -0.8
         if self.restart_menu:
             self.timer.stop()
             self.clear()
